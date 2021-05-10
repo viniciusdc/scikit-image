@@ -15,7 +15,7 @@ from numpy.distutils.command.build_ext import build_ext
 
 
 DISTNAME = 'scikit-image-citest'
-DESCRIPTION = 'For testing purposes only'
+DESCRIPTION = 'For testing purposes only.'
 MAINTAINER = 'Stefan van der Walt'
 MAINTAINER_EMAIL = 'stefan@sun.ac.za'
 URL = 'https://scikit-image.org'
