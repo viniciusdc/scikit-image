@@ -116,8 +116,8 @@ jobs:
           SK_VERSION=$(git describe --tags)
           python setup.py sdist
           ls -la ${{ github.workspace }}/dist
-          twine upload --repository testpypi ${{ github.workspace }}/dist/scikit-image-${SK_VERSION:1}*.tar.gz
-          twine upload --repository testpypi ${{ github.workspace }}/dist/scikit-image-${SK_VERSION:1}*.whl
+          twine upload --repository testpypi ${{ github.workspace }}/dist/scikit-image-citest-${SK_VERSION:1}*.tar.gz
+          twine upload --repository testpypi ${{ github.workspace }}/dist/scikit-image-citest-${SK_VERSION:1}*.whl
         env:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
