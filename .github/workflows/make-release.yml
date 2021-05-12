@@ -117,8 +117,9 @@ jobs:
           python setup.py sdist
           ls -la ${{ github.workspace }}/dist
           ls -la ${{ github.workspace }}/dist/*.whl
-          twine upload --repository testpypi ${{ github.workspace }}/dist/scikit-image-vinitestver-${SK_VERSION:1}*.tar.gz
-          twine upload --repository testpypi ${{ github.workspace }}/*.whl
+          twine upload --repository testpypi ${{ github.workspace }}/dist/scikit-image-vinitestver-${SK_VERSION:1}.tar.gz
+          cd ${{ github.workspace }}/dist
+          twine upload --repository testpypi *.whl
         env:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
