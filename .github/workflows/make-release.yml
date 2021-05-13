@@ -6,7 +6,7 @@ on:
 env:
   CIBW_BUILD_VERBOSITY: 2
   CIBW_TEST_REQUIRES: pytest pooch pytest-localserver pytest-faulthandler
-  CIBW_TEST_COMMAND: tools/github/release_test.sh
+  CIBW_TEST_COMMAND: ls -la && pytest --doctest-modules --cov=skimage --pyargs skimage && flake8 --exit-zero --exclude=test_* skimage doc/examples viewer_examples 
 
 
 jobs:
