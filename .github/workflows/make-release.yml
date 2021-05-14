@@ -10,7 +10,7 @@ env:
 
 
 jobs:
-  build_macos_wheels:
+ build_macos_wheels:
     name: Build wheels on ${{ matrix.os }}
     if: github.repository_owner == 'viniciusdc'
     runs-on: ${{ matrix.os }}
@@ -32,7 +32,6 @@ jobs:
       - name: Install cibuildwheel
         run: |
           python -m pip install cibuildwheel
-
       - name: Build wheels for CPython 3.9 and Mac OS
         run: |
           brew install libomp
@@ -49,75 +48,45 @@ jobs:
           CXXFLAGS: "-I/usr/local/opt/libomp/include"
           LDFLAGS: "-Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
 
-  
-  test_skimage_macos:
-    needs: [build_macos_wheels]
-    name: Test wheels on macos-cp${{ matrix.python-version }}
-    runs-on: macos-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        python-version: [3.9]
-        OPTIONAL_DEPS: [1]
-        include:
-          - python-version: 3.9
-            OPTIONAL_DEPS: 0
-        exclude:
-          - python-version: 3.9
-            OPTIONAL_DEPS: 1
+      - name: Build wheels for CPython (MacOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install libomp
+          python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: "cp3?-*"
+          CIBW_SKIP: "cp35-* cp36-* cp39-*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
+          CIBW_MANYLINUX_I686_IMAGE: manylinux1
+          # CIBW_BEFORE_BUILD: pip install certifi numpy==1.16
+          CC: /usr/bin/clang
+          CXX: /usr/bin/clang++
+          CPPFLAGS: "-Xpreprocessor -fopenmp"
+          CFLAGS: "-Wno-implicit-function-declaration -I/usr/local/opt/libomp/include"
+          CXXFLAGS: "-I/usr/local/opt/libomp/include"
+          LDFLAGS: "-Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
 
-    steps:
-      - name: Checkout scikit-image
-        uses: actions/checkout@v2
-
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      
-      - uses: actions/download-artifact@v2
-        id: download
+      - name: Build wheels for CPython 3.6
+        run: |
+          python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: "cp36-*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
+          CIBW_MANYLINUX_I686_IMAGE: manylinux1
+          CIBW_BUILD_VERBOSITY: 2
+          # CIBW_BEFORE_BUILD: pip install certifi numpy==1.16
+        if: >
+          startsWith(github.ref, 'refs/heads/v0.17') ||
+          startsWith(github.ref, 'refs/tags/v0.17')
+      - uses: actions/upload-artifact@v2
         with:
           name: wheels
-          path: ./dist
-      
-      - name:  Install Dependencies
-        run: |
-          python -m pip install --upgrade pip wheel setuptools
-          python -m pip install -r requirements/build.txt
-          python -m pip install -r requirements/default.txt
-          
-          echo 'Show instaled dependencies'
-          python -m pip list
-      
-      - name: Install Wheel
-        if: success()
-        run: |
-          SK_VERSION=$(git describe --tags)
-          PY_VER=${ matrix.python-version }
-          WHEEL_NAME=cp${PY_VER//.}-cp${PY_VER//.}m-macosx_10_9_x86_64
-          echo Instaling $WHEEL_NAME
-          pip install -vv dist/scikit_image_vinitestver-${SK_VERSION:1}-${WHEEL_NAME}.whl
-      
-      - name: Run Tests
-        if: success()
-        run: |
-          pip install -r requirements/test.txt
-          if [[ "${OPTIONAL_DEPS}" == "1" ]]; then
-                pip install -r ./requirements/optional.txt
-                pip install -r ./requirements/extras.txt
-            fi
-          for f in doc/examples/*/*.py; do
-            python "${f}"
-            if [ $? -ne 0 ]; then
-              exit 1
-            fi
-          done
+          path: ./dist/*.whl
       
     
   deploy:
     name: Release
-    needs: [test_skimage_macos]
+    needs: [build_macos_wheels]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
