@@ -115,7 +115,7 @@ jobs:
           SK_VERSION=$(git describe --tags)
           python setup.py sdist
           ls -la ${{ github.workspace }}/dist 
-          twine upload --repository testpypi ${{ github.workspace }}/dist/scikit-image-vinitestver-${SK_VERSION:1}.tar.gz
+          twine upload --repository testpypi ${{ github.workspace }}/dist/scikit-image-vinivertest-${SK_VERSION:1}.tar.gz
           cd ${{ github.workspace }}/dist
           twine upload --repository testpypi *.whl
         env:
@@ -123,6 +123,7 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
               
       - name: Github release
+        if: success()
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         env:
