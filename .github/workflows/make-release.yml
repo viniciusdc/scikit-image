@@ -155,7 +155,7 @@ jobs:
     
   deploy:
     name: Release
-    needs: [build_macos_wheels]
+    needs: [test_skimage_macos]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
