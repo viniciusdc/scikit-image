@@ -107,7 +107,7 @@ jobs:
 
     steps:
       - name: Checkout scikit-image
-      - uses: actions/checkout@v2
+        uses: actions/checkout@v2
 
       - name: Setup Python
         uses: actions/setup-python@v2
