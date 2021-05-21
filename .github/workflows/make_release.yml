@@ -15,7 +15,7 @@ jobs:
     name: Build python ${{ matrix.cibw_python }} wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [ubuntu-18.04]
         cibw_python: [ "cp37-*", "cp38-*" ]
@@ -57,7 +57,7 @@ jobs:
     if: github.repository_owner == 'viniciusdc'
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [macos-latest]
 
@@ -130,7 +130,7 @@ jobs:
     if: github.repository_owner == 'viniciusdc'
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [windows-latest]
 
