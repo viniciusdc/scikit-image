@@ -91,7 +91,6 @@ jobs:
 
       - name: Build wheels for CPython (MacOS)
         run: |
-          brew install libomp
           python -m cibuildwheel --output-dir dist
         env:
           CIBW_BUILD: "cp3?-*"
