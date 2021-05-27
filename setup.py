@@ -14,7 +14,7 @@ from distutils.errors import CompileError, LinkError
 from numpy.distutils.command.build_ext import build_ext
 
 
-DISTNAME = 'scikit-image-testviniver'
+DISTNAME = 'scikit-image-testviniver2'
 DESCRIPTION = 'Just a test'
 MAINTAINER = 'Stefan van der Walt'
 MAINTAINER_EMAIL = 'stefan@sun.ac.za'
