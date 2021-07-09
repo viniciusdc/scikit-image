@@ -1,0 +1,50 @@
+name: "GitHub Auto Release Notes"
+# GitHub release notes generator using Towncrier
+
+on:
+  push
+
+jobs:
+  build:
+    name: Create release notes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Install Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      
+      - name: Install Towncrier
+        run: |
+          pip install towncrier
+          
+      - name: Install Scikit-Image
+        run: |
+          pip install scikit-image
+      
+      - name: Generate draft notes
+        run: |
+          towncrier --draft 
+      
+      - name: Get reviewers and authors
+        run: |
+          # You'll require PyGitHub and tqdm, which you can install with:
+          pip install -r requirements/_release_tools.txt
+          export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          python tools/release_find_author_info.py ${{ github.workspace }}
+      
+      - name: Create release Notes
+        run: |
+          towncrier build --yes
+      - name: Get reviewers and authors
+        run: |
+          cat "reviewers_and_authors.txt" >> doc/release/release_0.19.0.dev0.rst
+      
+      - name: Generate artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: notes
+          path: ./doc/release/*.rst
