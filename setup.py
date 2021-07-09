@@ -14,7 +14,7 @@ from distutils.errors import CompileError, LinkError
 from numpy.distutils.command.build_ext import build_ext
 
 
-DISTNAME = 'scikit-image'
+DISTNAME = 'scikit-image-testreleasenote'
 DESCRIPTION = 'Image processing in Python'
 MAINTAINER = 'Stefan van der Walt'
 MAINTAINER_EMAIL = 'stefan@sun.ac.za'
