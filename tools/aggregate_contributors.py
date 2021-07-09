@@ -3,6 +3,7 @@ import argparse
 from datetime import datetime
 from collections import OrderedDict
 import string
+from pathlib import Path
 from warnings import warn
 
 from github import Github
@@ -110,18 +111,24 @@ def main(args):
 
     all_commits = get_commits(repository, users, reviewers, dir)
 
-    # find_author_info(dir, repository)
-    for commit in tqdm(all_commits, desc='Getting commiters and authors'):
-        committer, author = find_author_info(commit)
-        if committer is not None:
-            committers.add(committer)
-            # users maps github ids to a unique name.
-            add_to_users(users, commit.committer)
-            committers.add(users[commit.committer.login])
+    try:
+        # find_author_info(dir, repository)
+        for commit in tqdm(all_commits, desc='Getting commiters and authors'):
+            committer, author = find_author_info(commit)
+            if committer is not None:
+                committers.add(committer)
+                # users maps github ids to a unique name.
+                add_to_users(users, commit.committer)
+                committers.add(users[commit.committer.login])
 
-        if commit.author is not None:
-            add_to_users(users, commit.author)
-        authors.add(author)
+            if commit.author is not None:
+                add_to_users(users, commit.author)
+            authors.add(author)
+    except TypeError as e:
+        print('No significant changes.')
+        filename = Path('reviewers_and_authors.txt')
+        filename.write_text('')
+        return
 
     # this gets found as a commiter
     committers.discard('GitHub Web Flow')
