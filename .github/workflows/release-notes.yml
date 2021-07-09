@@ -34,7 +34,7 @@ jobs:
           # You'll require PyGitHub and tqdm, which you can install with:
           pip install -r requirements/_release_tools.txt
           export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          python tools/release_find_author_info.py ${{ github.workspace }}
+          python tools/aggregate_contributors.py ${{ github.workspace }}
       
       - name: Create release Notes
         run: |
