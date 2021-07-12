@@ -24,9 +24,7 @@ except ImportError:
         return i
 
 
-
-def get_commits(repo, users, reviewers, dir):
-    upcoming_changes_path = os.path.join(dir, "doc", "source", "upcoming_changes")
+def get_prs_list(upcoming_changes_path):
     prs_list = []
     for file in os.listdir(upcoming_changes_path):
         pr_number = file.split(".")[0]
@@ -34,31 +32,26 @@ def get_commits(repo, users, reviewers, dir):
             os.path.isfile(os.path.join(upcoming_changes_path, file))
             and pr_number.isnumeric()
         ):
-            prs_list.append(pr_number)
+            prs_list.append(int(pr_number))
 
-    if "towncrier_template" in prs_list:
-        prs_list.remove("towncrier_template")
 
-    if not prs_list:
-        # this list is empty, no significant changes to adress.
-        print("No significant changes.")
-        return
-    else:
-        print("Getting all commits from upcoming changes...")
-
-        all_commits = list()
-        for pr_number in prs_list:
-            try:
-                pr = repo.get_pull(int(pr_number))
-            except GithubException as e:
-                print(str(e))
-                continue
-            all_commits += [item for item in pr.get_commits()]
-            for review in pr.get_reviews():
-                if review.user.login not in users:
-                    users[review.user.login] = review.user.name
-                reviewers.add(users[review.user.login])
-        return all_commits
+def get_prs_info(project_dir):
+    all_commits = []
+    upcoming_changes_path = os.path.join(
+        project_dir, "doc", "source", "upcoming_changes"
+    )
+    remote = get_remote()
+    prs_list = get_prs_list(upcoming_changes_path)
+    print("Getting all commits from upcoming changes...")
+    for pr_number in prs_list:
+        try:
+            pr = remote.get_pull(pr_number)
+        except GithubException as e:
+            print(str(e))
+            continue
+        all_commits += [item for item in pr.get_commits()]
+    reviews = [r for r in pr.get_reviews()]
+    return all_commits, reviews
 
 
 def find_author_info(commit):
@@ -88,6 +81,35 @@ def find_author_info(commit):
     return committer, author
 
 
+def get_remote():
+    GH_TOKEN = os.environ.get("GH_TOKEN")
+    if GH_TOKEN is None:
+        raise RuntimeError(
+            "It is necessary that the environment variable `GH_TOKEN` "
+            "be set to avoid running into problems with rate limiting. "
+            "One can be acquired at https://github.com/settings/tokens.\n\n"
+            "You do not need to select any permission boxes while generating "
+            "the token."
+        )
+
+    g = Github(GH_TOKEN)
+    remote = g.get_repo(f"scikit-image/scikit-image")
+    return remote
+
+
+def get_contributor_info(all_commits, reviews):
+    authors = set()
+    committers = set()
+
+    for commit in tqdm(all_commits, desc="Getting committers and authors"):
+        committer, author = find_author_info(commit)
+        if committer is not None:
+            committers.add(committer)
+        authors.add(author)
+    reviewers = {r.user.login for r in reviews}
+    return authors, committers, reviewers
+
+
 def add_to_users(users, new_user):
     if new_user.name is None:
         users[new_user.login] = new_user.login
@@ -95,7 +117,7 @@ def add_to_users(users, new_user):
         users[new_user.login] = new_user.name
 
 
-def save_contributors_info(authors,committers,reviewers):
+def save_contributors_info(authors, committers, reviewers):
 
     # this gets found as a commiter
     committers.discard("GitHub Web Flow")
@@ -129,56 +151,20 @@ def save_contributors_info(authors,committers,reviewers):
 def get_user_args():
     parser = argparse.ArgumentParser(usage=__doc__)
     parser.add_argument("pdir", help="Root directory of the scikit-image project.")
-    user_args =  parser.parse_args()
+    user_args = parser.parse_args()
     return user_args
+
 
 def main(user_args=None):
     if not user_args:
         user_args = get_user_args()
 
     project_dir = user_args.pdir
-    GH_USER = "scikit-image"
-    GH_REPO = "scikit-image"
-    GH_TOKEN = os.environ.get("GH_TOKEN")
-    if GH_TOKEN is None:
-        raise RuntimeError(
-            "It is necessary that the environment variable `GH_TOKEN` "
-            "be set to avoid running into problems with rate limiting. "
-            "One can be acquired at https://github.com/settings/tokens.\n\n"
-            "You do not need to select any permission boxes while generating "
-            "the token."
-        )
+    all_commits, reviews = get_prs_info(remote, project_dir)
 
-    g = Github(GH_TOKEN)
-    repository = g.get_repo(f"{GH_USER}/{GH_REPO}")
+    authors, committers, reviewers = get_contributor_info(all_commits, reviews)
 
-    authors = set()
-    reviewers = set()
-    committers = set()
-    users = dict()  # keep track of known usernames
-
-    all_commits = get_commits(repository, users, reviewers, project_dir)
-
-    try:
-        # find_author_info(dir, repository)
-        for commit in tqdm(all_commits, desc="Getting committers and authors"):
-            committer, author = find_author_info(commit)
-            if committer is not None:
-                committers.add(committer)
-                # users maps github ids to a unique name.
-                add_to_users(users, commit.committer)
-                committers.add(users[commit.committer.login])
-
-            if commit.author is not None:
-                add_to_users(users, commit.author)
-            authors.add(author)
-    except TypeError as e:
-        print("No significant changes.")
-        filename = Path("reviewers_and_authors.txt")
-        filename.write_text("")
-        return
-
-    save_contributors_info(authors,committers,reviewers)
+    save_contributors_info(authors, committers, reviewers)
 
 
 if __name__ == "__main__":
