@@ -95,6 +95,37 @@ def add_to_users(users, new_user):
         users[new_user.login] = new_user.name
 
 
+def save_contributors_info(authors,committers,reviewers):
+
+    # this gets found as a commiter
+    committers.discard("GitHub Web Flow")
+    authors.discard("Azure Pipelines Bot")
+
+    contributors = OrderedDict()
+
+    contributors["authors"] = authors
+    # contributors['committers'] = committers
+    contributors["reviewers"] = reviewers
+    with open("reviewers_and_authors.txt", "w+") as file:
+        for section_name, contributor_set in contributors.items():
+            file.write("\n")
+            committer_str = (
+                f"{len(contributor_set)} {section_name} added to this "
+                "release [alphabetical by first name or login]\n"
+            )
+            file.write(committer_str)
+            file.write("-" * len(committer_str))
+            file.write("\n")
+
+            # Remove None from contributor set if it's in there.
+            if None in contributor_set:
+                contributor_set.remove(None)
+
+            for c in sorted(contributor_set, key=str.lower):
+                file.write(f"- {c} \n")
+            file.write("\n")
+
+
 def get_user_args():
     parser = argparse.ArgumentParser(usage=__doc__)
     parser.add_argument("pdir", help="Root directory of the scikit-image project.")
@@ -147,35 +178,7 @@ def main(user_args=None):
         filename.write_text("")
         return
 
-    # this gets found as a commiter
-    committers.discard("GitHub Web Flow")
-    authors.discard("Azure Pipelines Bot")
-
-    contributors = OrderedDict()
-
-    contributors["authors"] = authors
-    # contributors['committers'] = committers
-    contributors["reviewers"] = reviewers
-
-    with open("reviewers_and_authors.txt", "w+") as file:
-        for section_name, contributor_set in contributors.items():
-            file.write("\n")
-            committer_str = (
-                f"{len(contributor_set)} {section_name} added to this "
-                "release [alphabetical by first name or login]\n"
-            )
-            file.write(committer_str)
-            file.write("-" * len(committer_str))
-            file.write("\n")
-
-            # Remove None from contributor set if it's in there.
-            if None in contributor_set:
-                contributor_set.remove(None)
-
-            for c in sorted(contributor_set, key=str.lower):
-                file.write(f"- {c} \n")
-            file.write("\n")
-
+    save_contributors_info(authors,committers,reviewers)
 
 
 if __name__ == "__main__":
