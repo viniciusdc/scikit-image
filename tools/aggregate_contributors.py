@@ -25,7 +25,7 @@ except ImportError:
 
 
 parser = argparse.ArgumentParser(usage=__doc__)
-parser.add_argument("path", help="Curent directory.")
+parser.add_argument("path", help="Current directory.")
 args = parser.parse_args()
 
 
