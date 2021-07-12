@@ -8,6 +8,7 @@ from warnings import warn
 
 from github import Github
 from github import GithubException
+
 try:
     from tqdm import tqdm
 except ImportError:
@@ -18,9 +19,11 @@ except ImportError:
     def tqdm(i, **kwargs):
         return i
 
+
 parser = argparse.ArgumentParser(usage=__doc__)
 parser.add_argument('path', help='Curent directory.')
 args = parser.parse_args()
+
 
 def get_commits(repo, users, reviewers, dir):
     upcomming_changes_path = os.path.join(dir, 'doc','source', 'upcoming_changes')
@@ -53,6 +56,7 @@ def get_commits(repo, users, reviewers, dir):
                     users[review.user.login] = review.user.name
                 reviewers.add(users[review.user.login])
         return all_commits
+
 
 def find_author_info(commit):
     """Return committer and author of a commit.
