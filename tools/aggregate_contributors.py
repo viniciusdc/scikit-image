@@ -24,10 +24,6 @@ except ImportError:
         return i
 
 
-parser = argparse.ArgumentParser(usage=__doc__)
-parser.add_argument("path", help="Current directory.")
-args = parser.parse_args()
-
 
 def get_commits(repo, users, reviewers, dir):
     upcoming_changes_path = os.path.join(dir, "doc", "source", "upcoming_changes")
@@ -99,8 +95,17 @@ def add_to_users(users, new_user):
         users[new_user.login] = new_user.name
 
 
-def main(args):
-    dir = args.path
+def get_user_args():
+    parser = argparse.ArgumentParser(usage=__doc__)
+    parser.add_argument("path", help="Root directory of the scikit-image project.")
+    user_args =  parser.parse_args()
+    return user_args
+
+def main(user_args=None):
+    if not user_args:
+        user_args = get_user_args()
+
+    project_dir = user_args.path
     GH_USER = "scikit-image"
     GH_REPO = "scikit-image"
     GH_TOKEN = os.environ.get("GH_TOKEN")
@@ -121,7 +126,7 @@ def main(args):
     committers = set()
     users = dict()  # keep track of known usernames
 
-    all_commits = get_commits(repository, users, reviewers, dir)
+    all_commits = get_commits(repository, users, reviewers, project_dir)
 
     try:
         # find_author_info(dir, repository)
@@ -172,5 +177,6 @@ def main(args):
             file.write("\n")
 
 
+
 if __name__ == "__main__":
-    main(args)
+    main()
