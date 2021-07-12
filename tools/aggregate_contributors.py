@@ -130,7 +130,7 @@ def main(user_args=None):
 
     try:
         # find_author_info(dir, repository)
-        for commit in tqdm(all_commits, desc="Getting commiters and authors"):
+        for commit in tqdm(all_commits, desc="Getting committers and authors"):
             committer, author = find_author_info(commit)
             if committer is not None:
                 committers.add(committer)
