@@ -39,7 +39,7 @@ def get_commits(repo, users, reviewers, dir):
         return
     else:
         print('Getting all commits from upcomming changes...')
-    
+
         all_commits = list()
         for pr_number in prs_list:
             try:
@@ -53,7 +53,7 @@ def get_commits(repo, users, reviewers, dir):
                     users[review.user.login] = review.user.name
                 reviewers.add(users[review.user.login])
         return all_commits
-        
+
 def find_author_info(commit):
     """Return committer and author of a commit.
 
@@ -103,7 +103,7 @@ def main(args):
 
     g = Github(GH_TOKEN)
     repository = g.get_repo(f'{GH_USER}/{GH_REPO}')
-    
+
     authors = set()
     reviewers = set()
     committers = set()
@@ -160,4 +160,4 @@ def main(args):
 
 if __name__ == '__main__':
     main(args)
-    
+
