@@ -30,12 +30,12 @@ args = parser.parse_args()
 
 
 def get_commits(repo, users, reviewers, dir):
-    upcomming_changes_path = os.path.join(dir, "doc", "source", "upcoming_changes")
+    upcoming_changes_path = os.path.join(dir, "doc", "source", "upcoming_changes")
     prs_list = []
-    for file in os.listdir(upcomming_changes_path):
+    for file in os.listdir(upcoming_changes_path):
         pr_number = file.split(".")[0]
         if (
-            os.path.isfile(os.path.join(upcomming_changes_path, file))
+            os.path.isfile(os.path.join(upcoming_changes_path, file))
             and pr_number.isnumeric()
         ):
             prs_list.append(pr_number)
@@ -48,7 +48,7 @@ def get_commits(repo, users, reviewers, dir):
         print("No significant changes.")
         return
     else:
-        print("Getting all commits from upcomming changes...")
+        print("Getting all commits from upcoming changes...")
 
         all_commits = list()
         for pr_number in prs_list:
