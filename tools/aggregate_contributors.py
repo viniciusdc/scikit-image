@@ -97,7 +97,7 @@ def add_to_users(users, new_user):
 
 def get_user_args():
     parser = argparse.ArgumentParser(usage=__doc__)
-    parser.add_argument("path", help="Root directory of the scikit-image project.")
+    parser.add_argument("pdir", help="Root directory of the scikit-image project.")
     user_args =  parser.parse_args()
     return user_args
 
@@ -105,7 +105,7 @@ def main(user_args=None):
     if not user_args:
         user_args = get_user_args()
 
-    project_dir = user_args.path
+    project_dir = user_args.pdir
     GH_USER = "scikit-image"
     GH_REPO = "scikit-image"
     GH_TOKEN = os.environ.get("GH_TOKEN")
