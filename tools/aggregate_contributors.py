@@ -59,6 +59,7 @@ def get_prs_info(project_dir):
     )
     remote = get_remote()
     prs_list = get_prs_list(upcoming_changes_path)
+    reviews = []
     print("Getting all commits from upcoming changes...")
     for pr_number in prs_list:
         try:
@@ -67,7 +68,7 @@ def get_prs_info(project_dir):
             print(str(e))
             continue
         all_commits += [item for item in pr.get_commits()]
-    reviews = [r for r in pr.get_reviews()]
+        reviews += [r for r in pr.get_reviews()]
     return all_commits, reviews
 
 
