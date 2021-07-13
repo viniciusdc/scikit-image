@@ -33,12 +33,14 @@ jobs:
         run: |
           # You'll require PyGitHub and tqdm, which you can install with:
           pip install -r requirements/_release_tools.txt
-          export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           python tools/aggregate_contributors.py ${{ github.workspace }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Create release Notes
         run: |
           towncrier build --yes
+
       - name: Get reviewers and authors
         run: |
           cat "reviewers_and_authors.txt" >> doc/release/release_0.19.0.dev0.rst
