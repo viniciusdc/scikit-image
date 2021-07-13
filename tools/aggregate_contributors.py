@@ -33,6 +33,23 @@ def get_prs_list(upcoming_changes_path):
             and pr_number.isnumeric()
         ):
             prs_list.append(int(pr_number))
+    return prs_list
+
+
+def get_remote():
+    GH_TOKEN = os.environ.get("GH_TOKEN")
+    if GH_TOKEN is None:
+        raise RuntimeError(
+            "It is necessary that the environment variable `GH_TOKEN` "
+            "be set to avoid running into problems with rate limiting. "
+            "One can be acquired at https://github.com/settings/tokens.\n\n"
+            "You do not need to select any permission boxes while generating "
+            "the token."
+        )
+
+    g = Github(GH_TOKEN)
+    remote = g.get_repo(f"scikit-image/scikit-image")
+    return remote
 
 
 def get_prs_info(project_dir):
@@ -79,22 +96,6 @@ def find_author_info(commit):
         # Users that deleted their accounts will appear as None
         author = git_author
     return committer, author
-
-
-def get_remote():
-    GH_TOKEN = os.environ.get("GH_TOKEN")
-    if GH_TOKEN is None:
-        raise RuntimeError(
-            "It is necessary that the environment variable `GH_TOKEN` "
-            "be set to avoid running into problems with rate limiting. "
-            "One can be acquired at https://github.com/settings/tokens.\n\n"
-            "You do not need to select any permission boxes while generating "
-            "the token."
-        )
-
-    g = Github(GH_TOKEN)
-    remote = g.get_repo(f"scikit-image/scikit-image")
-    return remote
 
 
 def get_contributor_info(all_commits, reviews):
@@ -160,7 +161,7 @@ def main(user_args=None):
         user_args = get_user_args()
 
     project_dir = user_args.pdir
-    all_commits, reviews = get_prs_info(remote, project_dir)
+    all_commits, reviews = get_prs_info(project_dir)
 
     authors, committers, reviewers = get_contributor_info(all_commits, reviews)
 
