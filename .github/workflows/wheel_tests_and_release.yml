@@ -189,10 +189,15 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      
       - uses: actions/setup-python@v2
         name: Install Python
         with:
           python-version: '3.7'
+      
+      - name: Set release version number
+        run: |
+          echo "RELEASE_VERSION=${$(git describe --tags):1}" >> $GITHUB_ENV
       
       - name: Install Twine
         run: |
@@ -208,18 +213,51 @@ jobs:
     
       - name: Publish the source distribution on PyPI
         run: |
-          SK_VERSION=$(git describe --tags)
           python setup.py sdist
           ls -la ${{ github.workspace }}/dist 
-          twine upload ${{ github.workspace }}/dist/scikit-image-${SK_VERSION:1}.tar.gz
+          twine upload ${{ github.workspace }}/dist/scikit-image-${RELEASE_VERSION}.tar.gz
           cd ${{ github.workspace }}/dist
           twine upload *.whl
         env:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-              
+      
+      ### Generate Release Notes and Release on Github
+      
+      - name: Install Towncrier
+        run: |
+          pip install towncrier
+          
+      - name: Generate draft notes
+        run: |
+          towncrier --draft --version=${RELEASE_VERSION}
+      
+      - name: Get reviewers and authors
+        run: |
+          # You'll require PyGitHub and tqdm, which you can install with:
+          pip install -r requirements/_release_tools.txt
+          python tools/aggregate_contributors.py ${{ github.workspace }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create release Notes
+        run: |
+          towncrier build --yes --version=${RELEASE_VERSION}
+
+      - name: Get reviewers and authors
+        run: |
+          cat "reviewers_and_authors.txt" >> doc/release/release_${RELEASE_VERSION}.rst
+      
+      - name: Generate artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: notes
+          path: ./doc/release/*.rst
+
       - name: Github release
         uses: softprops/action-gh-release@v1
+        with:
+          files: doc/release/release_${RELEASE_VERSION}.rst
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
