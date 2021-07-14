@@ -98,18 +98,16 @@ jobs:
       
       ### Generate Release Notes and Release on Github
       
-      - name: Install Towncrier
+      - name: Install release notes deps
         run: |
-          pip install towncrier
-          
+          pip install -r requirements/_release_tools.txt
+
       - name: Generate draft notes
         run: |
           towncrier --draft --version=${RELEASE_VERSION}
       
       - name: Get reviewers and authors
         run: |
-          # You'll require PyGitHub and tqdm, which you can install with:
-          pip install -r requirements/_release_tools.txt
           python tools/aggregate_contributors.py ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
