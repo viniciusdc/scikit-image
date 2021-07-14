@@ -21,13 +21,9 @@ jobs:
         run: |
           pip install towncrier
           
-      - name: Install Scikit-Image
-        run: |
-          pip install scikit-image
-      
       - name: Generate draft notes
         run: |
-          towncrier --draft 
+          towncrier --draft --version=0.19.0.dev0
       
       - name: Get reviewers and authors
         run: |
@@ -39,7 +35,7 @@ jobs:
       
       - name: Create release Notes
         run: |
-          towncrier build --yes
+          towncrier build --yes --version=0.19.0.dev0
 
       - name: Get reviewers and authors
         run: |

@@ -31,8 +31,6 @@ requires = [
 ]
 
 [tool.towncrier]
-  package  = "skimage"
-  package_dir = "."
   filename = "doc/release/release_{version}.rst"
   directory = "doc/source/upcoming_changes"
   issue_format = "`#{issue} <https://github.com/scikit-image/scikit-image/issues/{issue}>`_"  
