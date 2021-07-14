@@ -84,7 +84,7 @@ jobs:
   deploy:
     name: Release
     needs: [build_macos_wheels]
-    if: github.repository_owner == 'scikit-image' && startsWith(github.ref, 'refs/tags/v') && always()
+    if: github.repository_owner == 'viniciusdc' && startsWith(github.ref, 'refs/tags/v') && always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -116,7 +116,7 @@ jobs:
         run: |
           python setup.py sdist
           ls -la ${{ github.workspace }}/dist 
-          twine upload ${{ github.workspace }}/dist/scikit-image-${RELEASE_VERSION}.tar.gz
+          twine upload ${{ github.workspace }}/dist/scikit-image-testreleasenote-${RELEASE_VERSION}.tar.gz
           cd ${{ github.workspace }}/dist
           twine upload *.whl
         env:
