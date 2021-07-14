@@ -121,6 +121,7 @@ jobs:
       - name: Get reviewers and authors
         run: |
           cat "reviewers_and_authors.txt" >> doc/release/release_${RELEASE_VERSION}.rst
+          cp doc/release/release_${RELEASE_VERSION}.rst /tmp/release_notes.rst
       
       - name: Generate artifact
         uses: actions/upload-artifact@v2
@@ -131,7 +132,7 @@ jobs:
       - name: Github release
         uses: softprops/action-gh-release@v1
         with:
-          files: doc/release/release_${RELEASE_VERSION}.rst
+          files: /tmp/release_notes.rst
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
