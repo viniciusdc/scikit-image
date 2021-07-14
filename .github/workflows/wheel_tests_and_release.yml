@@ -116,10 +116,11 @@ jobs:
         run: |
           towncrier build --yes --version=${RELEASE_VERSION}
 
-      - name: Get reviewers and authors
+      - name: Merge and preview release notes
         run: |
           cat "reviewers_and_authors.txt" >> doc/release/release_${RELEASE_VERSION}.rst
           cp doc/release/release_${RELEASE_VERSION}.rst /tmp/release_notes.rst
+          cat /tmp/release_notes.rst
       
       - name: Generate artifact
         uses: actions/upload-artifact@v2
