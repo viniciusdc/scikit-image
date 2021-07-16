@@ -161,11 +161,24 @@ def get_user_args():
     return user_args
 
 
+def get_project_dir(pdir):
+    if not pdir:
+        pdir = os.getcwd()
+
+    # check if the project directory is correct
+
+    if not os.path.isfile(os.path.join(pdir, "pyproject.toml")):
+        raise ValueError(
+            "Consider changing to the scikit-image main directory or passing it as an argument"
+        )
+    return pdir
+
+
 def main(user_args=None):
     if not user_args:
         user_args = get_user_args()
 
-    project_dir = user_args.pdir
+    project_dir = get_project_dir(user_args.pdir)
     all_commits, reviews = get_prs_info(project_dir)
 
     authors, committers, reviewers = get_contributor_info(all_commits, reviews)
