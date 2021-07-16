@@ -11,6 +11,47 @@ env:
 
 
 jobs:
+  build_linux_37_and_above_wheels:
+    name: Build python ${{ matrix.cibw_python }} wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04]
+        cibw_python: [ "cp37-*", "cp38-*" ]
+        cibw_manylinux: [ manylinux1 ]
+        include:
+          - os: ubuntu-18.04
+            cibw_python: "cp39-*"
+            cibw_manylinux: manylinux2010
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: arm64
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install cibuildwheel
+      - name: Build the wheel
+        run: |
+          python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: ${{ matrix.cibw_python }}
+          CIBW_ARCHS_LINUX: auto aarch64
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.cibw_manylinux }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.cibw_manylinux }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: ./dist/*.whl
+
   build_macos_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -32,7 +73,6 @@ jobs:
       - name: Install cibuildwheel
         run: |
           python -m pip install cibuildwheel
-
       - name: Build wheels for CPython 3.9 and Mac OS
         run: |
           brew install libomp
@@ -49,6 +89,91 @@ jobs:
           CXXFLAGS: "-I/usr/local/opt/libomp/include"
           LDFLAGS: "-Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
 
+      - name: Build wheels for CPython (MacOS)
+        run: |
+          python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: "cp3?-*"
+          CIBW_SKIP: "cp35-* cp36-* cp39-*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
+          CIBW_MANYLINUX_I686_IMAGE: manylinux1
+          # CIBW_BEFORE_BUILD: pip install certifi numpy==1.16
+          CC: /usr/bin/clang
+          CXX: /usr/bin/clang++
+          CPPFLAGS: "-Xpreprocessor -fopenmp"
+          CFLAGS: "-Wno-implicit-function-declaration -I/usr/local/opt/libomp/include"
+          CXXFLAGS: "-I/usr/local/opt/libomp/include"
+          LDFLAGS: "-Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
+
+      - name: Build wheels for CPython 3.6
+        run: |
+          python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: "cp36-*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
+          CIBW_MANYLINUX_I686_IMAGE: manylinux1
+          CIBW_BUILD_VERBOSITY: 2
+          # CIBW_BEFORE_BUILD: pip install certifi numpy==1.16
+        if: >
+          startsWith(github.ref, 'refs/heads/v0.17') ||
+          startsWith(github.ref, 'refs/tags/v0.17')
+      - uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: ./dist/*.whl
+
+  build_windows_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install cibuildwheel
+      - name: Build wheels for CPython 3.9 (Linux and Windows)
+        run: |
+          python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: "cp39-*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
+          CIBW_MANYLINUX_I686_IMAGE: manylinux1
+          # CIBW_BEFORE_BUILD: pip install certifi numpy==1.19.3
+
+      - name: Build Windows wheels for CPython
+        run: |
+          python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: "cp3?-*"
+          CIBW_SKIP: "cp35-* cp36-* cp39-*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
+          CIBW_MANYLINUX_I686_IMAGE: manylinux1
+          # CIBW_BEFORE_BUILD: pip install certifi numpy==1.16
+
+      - name: Build wheels for CPython 3.6
+        run: |
+          python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_BUILD: "cp36-*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
+          CIBW_MANYLINUX_I686_IMAGE: manylinux1
+          CIBW_BUILD_VERBOSITY: 2
+          # CIBW_BEFORE_BUILD: pip install certifi numpy==1.16
+        if: >
+          startsWith(github.ref, 'refs/heads/v0.17') ||
+          startsWith(github.ref, 'refs/tags/v0.17')
       - uses: actions/upload-artifact@v2
         with:
           name: wheels
@@ -56,8 +181,8 @@ jobs:
 
   deploy:
     name: Release
-    needs: [build_macos_wheels]
-    if: github.repository_owner == 'viniciusdc' && startsWith(github.ref, 'refs/tags/v') && always()
+    needs: [build_linux_37_and_above_wheels, build_macos_wheels, build_windows_wheels]
+    if: github.repository_owner == 'scikit-image' && startsWith(github.ref, 'refs/tags/v') && always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -88,8 +213,8 @@ jobs:
       - name: Publish the source distribution on PyPI
         run: |
           python setup.py sdist
-          # We prefer to release wheels before source because otherwise there is a 
-          # small window during which users who pip install scikit-image will require compilation. 
+          # We prefer to release wheels before source because otherwise there is a
+          # small window during which users who pip install scikit-image will require compilation.
           cd ${{ github.workspace }}/dist
           ls -la
           twine upload *.whl
@@ -143,6 +268,7 @@ jobs:
           # See https://github.community/t/github-actions-bot-email-address/17204/5
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions"
+          git add remote origin https://github.com/scikit-image/scikit-image.git
 
           # Commit newsfragments deletion and the new release notes
           git commit -m "${COMMIT_MSG}"
